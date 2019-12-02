@@ -1,0 +1,32 @@
+# python
+__pycache__/
+*.pyc
+
+# IDEs and editors
+.idea
+.vscode
+.cache
+
+
+# Operting system
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Input Data Files
+training_images
+
+# Project Output
+data
+runs
+archive
+
+# Log files
+Logs
+
+# tmp files
+*.swn
+*.swo
+*.swp
+*~
