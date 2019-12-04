@@ -21,11 +21,11 @@ class Path:
 
     @property
     def start(self):
-        return self.offset_grid_coordinate(self._nodes[0])
+        return self.offset_grid_coordinate(self._nodes[0]) if len(self._nodes) > 0 else None
 
     @property
     def goal(self):
-        return self.offset_grid_coordinate(self._nodes[-1])
+        return self.offset_grid_coordinate(self._nodes[-1]) if len(self._nodes) > 0 else None
 
     @property
     def cost(self):
