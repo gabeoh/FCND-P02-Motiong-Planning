@@ -13,9 +13,11 @@ from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
 from udacidrone.frame_utils import global_to_local
 
-from planner import PlannerGrid, Path
+from planner import Path, PlannerGrid, PlannerGraph
 
-planner = 1
+class PlannerType(Enum):
+    GRID = 1
+    GRAPH = 2
 
 class States(Enum):
     MANUAL = auto()
@@ -26,12 +28,12 @@ class States(Enum):
     DISARMING = auto()
     PLANNING = auto()
 
-
 class MotionPlanning(Drone):
 
-    def __init__(self, connection, plot_path=False):
+    def __init__(self, connection, plot_path=False, planner_type=PlannerType.GRAPH):
         super().__init__(connection)
         self._plot_path = plot_path
+        self._planner_type =PlannerType(planner_type)
 
         self.target_position = np.array([0.0, 0.0, 0.0])
         self.waypoints = []
@@ -163,18 +165,19 @@ class MotionPlanning(Drone):
 
         # Set goal as some arbitrary position on the grid
         # Home (lat0, lon0): 37.79248, -122.39745
-        # goal_global = (-122.3966, 37.796, TARGET_ALTITUDE)
-        goal_global = (-122.397, 37.793, TARGET_ALTITUDE)
+        goal_global = (-122.3966, 37.796, TARGET_ALTITUDE)
+        # goal_global = (-122.397, 37.793, TARGET_ALTITUDE)
         goal_local = global_to_local(goal_global, self.global_home)
         goal_grid = grid.coord2grid(goal_local)
         logging.debug("GOAL - Global: {}, Local: {}".format(goal_global, goal_local))
 
         # Grid-based path finder
-        if 1 == 1:
+        if self._planner_type == PlannerType.GRID:
             # Find path using grid-based a*
             path: Path = grid.a_star(start_grid, goal_grid)
             logging.debug(path.details)
 
+            # Plot grid and path
             if self._plot_path:
                 fig, ax = plt.subplots()
                 grid.draw(ax)
@@ -184,19 +187,30 @@ class MotionPlanning(Drone):
             # prune path to minimize number of waypoints
             path.prune()
             logging.debug(path.details)
-        else:
-            # TODO (if you're feeling ambitious): Try a different approach altogether!
-            pass
+        elif self._planner_type == PlannerType.GRAPH:
+            # Find path using graph-based a* (Voroni edge algorithm to build the graph)
+            graph = PlannerGraph(grid)
+            path: Path = graph.a_star(start_local[:2], goal_local[:2])
+            logging.debug(path.details)
+
+            # Plot grid and edges
+            if self._plot_path:
+                fig, ax = plt.subplots()
+                grid.draw(ax)
+                graph.draw_edges(ax)
+                path.draw(ax)
+                fig.show()
 
         # Convert path noodes to waypoints
         waypoints = np.c_[path.nodes_offset, np.full(path.num_nodes, TARGET_ALTITUDE, dtype=int),
                           np.zeros(path.num_nodes, dtype=int)].tolist()
 
-        # Set self.waypoints
-        self.waypoints = waypoints
+        if len(waypoints) > 0:
+            # Set self.waypoints
+            self.waypoints = waypoints
 
-        # TODO: send waypoints to sim (this is just for visualization of waypoints)
-        self.send_waypoints()
+            # send waypoints to sim (this is just for visualization of waypoints)
+            self.send_waypoints()
 
     def start(self):
         self.start_log("Logs", "NavLog.txt")
@@ -219,10 +233,11 @@ if __name__ == "__main__":
     parser.add_argument('--port', type=int, default=5760, help='Port number')
     parser.add_argument('--host', type=str, default='127.0.0.1', help="host address, i.e. '127.0.0.1'")
     parser.add_argument('--plot-path', help="Show path plot", action="store_true")
+    parser.add_argument('--planner-type', type=int, default=2, help="1: Grid-based, 2: Graph-based")
     args = parser.parse_args()
 
     conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), timeout=60)
-    drone = MotionPlanning(conn, plot_path=args.plot_path)
+    drone = MotionPlanning(conn, plot_path=args.plot_path, planner_type=args.planner_type)
     time.sleep(1)
 
     drone.start()
