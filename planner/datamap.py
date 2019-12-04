@@ -18,19 +18,23 @@ class DataMap:
         self._ob_polygons = []
         self._ob_kdt = None
 
-        self.n_min = np.amin(data[:, 0] - data[:, 3])
-        self.n_max = np.amax(data[:, 0] + data[:, 3])
-        self.n_center_min = np.amin(data[:, 0])
-        self.e_min = np.amin(data[:, 1] - data[:, 4])
-        self.e_max = np.amax(data[:, 1] + data[:, 4])
-        self.e_center_min = np.amin(data[:, 1])
-        self.a_min = np.amin(data[:, 2] - data[:, 4])
-        self.a_max = np.amax(data[:, 2] + data[:, 4])
-        self.a_center_min = np.amin(data[:, 2])
+        self._n_min = np.amin(data[:, 0] - data[:, 3])
+        self._n_max = np.amax(data[:, 0] + data[:, 3])
+        self._n_center_min = np.amin(data[:, 0])
+        self._e_min = np.amin(data[:, 1] - data[:, 4])
+        self._e_max = np.amax(data[:, 1] + data[:, 4])
+        self._e_center_min = np.amin(data[:, 1])
+        self._a_min = np.amin(data[:, 2] - data[:, 4])
+        self._a_max = np.amax(data[:, 2] + data[:, 4])
+        self._a_center_min = np.amin(data[:, 2])
 
-        self.n_size = int(np.ceil(self.n_max - self.n_min))
-        self.e_size = int(np.ceil(self.e_max - self.e_min))
-        self.a_size = int(np.ceil(self.a_max - self.a_min))
+        self._n_size = int(np.ceil(self._n_max - self._n_min))
+        self._e_size = int(np.ceil(self._e_max - self._e_min))
+        self._a_size = int(np.ceil(self._a_max - self._a_min))
+
+        self._n_offset = int(np.floor(self._n_min))
+        self._e_offset = int(np.floor(self._e_min))
+        self._a_offset = int(np.floor(self._a_min))
 
     @property
     def obstacle_data(self):
@@ -48,6 +52,18 @@ class DataMap:
     def edges(self):
         return self._edges
 
+    @property
+    def n_offset(self):
+        return self._n_offset
+
+    @property
+    def e_offset(self):
+        return self._e_offset
+
+    @property
+    def a_offset(self):
+        return self._a_offset
+
     def create_grid(self, drone_altitude, safety_distance):
         """
         Create a 2-D grid representation of obstacle data at given altitude with safety margin
@@ -58,7 +74,7 @@ class DataMap:
         """
 
         # Initialize an empty grid
-        self._grid = np.zeros((self.n_size, self.e_size))
+        self._grid = np.zeros((self._n_size, self._e_size))
         self._ob_centers = []
 
         # Populate the grid with obstacles
@@ -72,10 +88,10 @@ class DataMap:
             if alt_min > drone_altitude or alt_max < drone_altitude:
                 continue
 
-            n_coord_min = max(0, int(np.floor(north - self.n_center_min - d_north - safety_distance)))
-            n_coord_max = min(self.n_size - 1, int(np.ceil(north - self.n_center_min + d_north + safety_distance)))
-            e_coord_min = max(0, int(np.floor(east - self.e_center_min - d_east - safety_distance)))
-            e_coord_max = min(self.e_size - 1, int(np.ceil(east - self.e_center_min + d_east + safety_distance)))
+            n_coord_min = max(0, int(np.floor(north - self._n_center_min - d_north - safety_distance)))
+            n_coord_max = min(self._n_size - 1, int(np.ceil(north - self._n_center_min + d_north + safety_distance)))
+            e_coord_min = max(0, int(np.floor(east - self._e_center_min - d_east - safety_distance)))
+            e_coord_max = min(self._e_size - 1, int(np.ceil(east - self._e_center_min + d_east + safety_distance)))
 
             # Set grid cells containing obstacles to 1 - grid[n, e] = 1
             self._grid[n_coord_min:n_coord_max + 1, e_coord_min:e_coord_max + 1] = 1
@@ -129,8 +145,8 @@ class DataMap:
             cells = bresenham(p1[0], p1[1], p2[0], p2[1])
             for cell in cells:
                 # Exclude if cell goes out of bound
-                if cell[0] < 0 or cell[0] >= self.n_size or \
-                        cell[1] < 0 or cell[1] >= self.e_size:
+                if cell[0] < 0 or cell[0] >= self._n_size or \
+                        cell[1] < 0 or cell[1] >= self._e_size:
                     in_collision = True
                     break
                 if self._grid[cell[0], cell[1]] == 1:
@@ -175,24 +191,24 @@ class DataMap:
         return True
 
     def coord2grid(self, coord):
-        if coord[0] < self.n_min or coord[0] > self.n_max or coord[1] < self.e_min or coord[1] > self.e_max:
+        if coord[0] < self._n_min or coord[0] > self._n_max or coord[1] < self._e_min or coord[1] > self._e_max:
             raise ValueError("The cell, {}, is out of boundary".format(coord))
-        n_grid = int(round(coord[0] - self.n_min))
-        e_grid = int(round(coord[1] - self.e_min))
+        n_grid = int(round(coord[0] - self._n_offset))
+        e_grid = int(round(coord[1] - self._e_offset))
         return (n_grid, e_grid)
 
     def grid2coord(self, grid):
-        if grid[0] < 0 or grid[0] >= self.n_size or grid[1] < 0 or grid[1] > self.e_size:
+        if grid[0] < 0 or grid[0] >= self._n_size or grid[1] < 0 or grid[1] > self._e_size:
             raise ValueError("The grid, {}, is out of boundary".format(grid))
-        return (grid[0] + self.n_min, grid[1] + self.e_min)
+        return (grid[0] + self._n_offset, grid[1] + self._e_offset)
 
     def print_details(self):
         print("##################################")
         print("# Datamap Details")
         print("##################################")
-        print("North: ({}, {}) => {}".format(self.n_min, self.n_max, self.n_size))
-        print("East: ({}, {}) => {}".format(self.e_min, self.e_max, self.e_size))
-        print("Altitude: ({}, {}) => {}".format(self.a_min, self.a_max, self.a_size))
+        print("North: ({}, {}) => {}, {}".format(self._n_min, self._n_max, self._n_offset, self._n_size))
+        print("East: ({}, {}) => {}, {}".format(self._e_min, self._e_max, self._e_offset, self._e_size))
+        print("Altitude: ({}, {}) => {}, {}".format(self._a_min, self._a_max, self._a_offset, self._a_size))
 
         if self.grid is None:
             print("No grid has been set")
@@ -208,10 +224,10 @@ class DataMap:
             print("No grid has been set")
             return
 
-        x_min = int(np.floor(self.e_min))
-        x_max = x_min + self.e_size
-        y_min = int(np.floor(self.n_min))
-        y_max = y_min + self.n_size
+        x_min = int(np.floor(self._e_min))
+        x_max = x_min + self._e_size
+        y_min = int(np.floor(self._n_min))
+        y_max = y_min + self._n_size
         ax.imshow(self.grid, cmap='Greys', origin='lower', extent=[x_min, x_max, y_min, y_max])
 
         ax.set_ylabel('NORTH')

@@ -58,7 +58,7 @@ class Planner:
         fig, ax = plt.subplots()
 
         # Draw grid and edges
-        self._datamap.draw_grid(ax)
+        self._datamap.draw(ax)
         self._datamap.draw_edges(ax)
         fig.show()
 
@@ -67,7 +67,7 @@ class Planner:
         fig, ax = plt.subplots()
 
         # Draw grid and edges
-        self._datamap.draw_grid(ax)
+        self._datamap.draw(ax)
         self._datamap.draw_edges(ax)
 
         # Draw global plan
@@ -79,7 +79,7 @@ class Planner:
         fig, ax = plt.subplots()
 
         # Draw grid and edges
-        self._datamap.draw_grid(ax)
+        self._datamap.draw(ax)
         self._datamap.draw_edges(ax)
 
         # Draw global plan

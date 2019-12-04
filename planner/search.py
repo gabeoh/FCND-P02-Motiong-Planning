@@ -1,7 +1,7 @@
 import logging
 from queue import PriorityQueue
-from planner.graph import PlannerGraph
-from planner.path import Path
+from .graph import PlannerGraph
+from .path import Path
 
 def a_star(graph: PlannerGraph, heuristic, start, goal) -> Path:
     """
