@@ -95,12 +95,24 @@ class PlannerGrid:
         return self._grid
 
     @property
+    def ob_centers(self):
+        return self._ob_centers
+
+    @property
     def n_offset(self):
         return self._n_offset
 
     @property
     def e_offset(self):
         return self._e_offset
+
+    @property
+    def n_size(self):
+        return self._n_size
+
+    @property
+    def e_size(self):
+        return self._e_size
 
     def coord2grid(self, coord):
         if coord[0] < self._n_min or coord[0] > self._n_max or coord[1] < self._e_min or coord[1] > self._e_max:
@@ -186,13 +198,14 @@ class PlannerGrid:
         path_cost = 0.0
         if found:
             # retrace steps
-            n = goal
-            path_cost = branch[n][0]
             path_nodes.append(goal)
-            while branch[n][1] != start:
+            if goal in branch:
+                n = goal
+                path_cost = branch[n][0]
+                while branch[n][1] != start:
+                    path_nodes.append(branch[n][1])
+                    n = branch[n][1]
                 path_nodes.append(branch[n][1])
-                n = branch[n][1]
-            path_nodes.append(branch[n][1])
         else:
             logging.warning('**********************')
             logging.warning('Failed to find a path!')
