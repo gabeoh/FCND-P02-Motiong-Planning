@@ -5,7 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from . import util
 
 class Path:
-    def __init__(self, path_nodes, path_cost, offset=None):
+    def __init__(self, path_nodes=[], path_cost=0.0, offset=None):
         self._nodes = path_nodes
         self._cost = path_cost
         self._offset = offset
@@ -51,6 +51,9 @@ class Path:
                 len(self._nodes), start, goal, self.cost)
         return msg
 
+    def is_empty(self):
+        return len(self._nodes) < 1
+
     def prune(self, collinearity_th=1e-6):
         """
 
@@ -66,6 +69,9 @@ class Path:
                 i += 1
 
     def draw(self, ax, color='green', markersize=9, show_endpoints=True):
+        if self.is_empty():
+            return
+
         nodes = np.array(self._nodes)
         if self._offset is not None:
             nodes += self._offset
@@ -75,6 +81,9 @@ class Path:
         ax.plot(nodes[:, 1], nodes[:, 0], color=color, linewidth=3)
 
     def draw_path_3d(self, color='blue', show_endpoints=True):
+        if self.is_empty():
+            return
+
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
