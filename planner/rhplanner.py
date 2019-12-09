@@ -12,7 +12,7 @@ from .sampler import Sampler
 from .path import Path
 
 
-class Planner:
+class RecedingHorizonPlanner:
     def __init__(self, obstacle_file, flight_altitude=3, safety_distance=3):
         self._obstacle_file = obstacle_file
         self._flight_altitude = flight_altitude
