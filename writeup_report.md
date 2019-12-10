@@ -1,5 +1,5 @@
 # 3D Motion Planning
-![Plan Route](./results/FC_MotionPlan_Route.png)
+![Plan Route](results/FC_MotionPlan_Route.png)
 
 ---
 
@@ -106,7 +106,7 @@ interface and prevents frequent stop-and-go on a straight line travel.
 
 The following figure shows a path plan created by grid-based
 planner.
-![Path - GridBased](./results/MotionPlan_Path_GridBased.png)
+![Path - GridBased](results/MotionPlan_Path_GridBased.png)
 
 
 ### 6. Graph-Based Path Finder (Default)
@@ -203,7 +203,7 @@ and goal locations.  As discussed in the implementation section, however,
 each approach has some limitations in routing through some challenging
 areas such as edges of the map and narrow  strips.
 
-![Trip](results/FC_MOtionPlan_Trip.png)
+![Trip](results/FC_MotionPlan_Trip.png)
 
 ### Video Recording
 * [FC_MotionPlan_Recording_2019-12-09.mp4](results/FC_MotionPlan_Recording_2019-12-09.mp4)
