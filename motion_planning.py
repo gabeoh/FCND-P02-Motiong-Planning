@@ -194,16 +194,18 @@ class MotionPlanning(Drone):
             path: Path = grid.a_star(start_grid, goal_grid)
             logging.debug(path.details)
 
+            # prune path to minimize number of waypoints
+            path.prune()
+            logging.debug(path.details)
+
             # Plot grid and path
             if self._plot_path:
                 fig, ax = plt.subplots()
                 grid.draw(ax)
                 path.draw(ax)
+                # fig.savefig('MotionPlan_Path_GridBased.png')
                 fig.show()
 
-            # prune path to minimize number of waypoints
-            path.prune()
-            logging.debug(path.details)
         elif self._planner_type == PlannerType.GRAPH:
             # Find path using graph-based a* (Voroni edge algorithm to build the graph)
             graph = PlannerGraph(grid)
@@ -218,6 +220,7 @@ class MotionPlanning(Drone):
                 ax.plot(start_local[1], start_local[0], marker='o', markersize=9, color='red')
                 ax.plot(goal_local[1], goal_local[0], marker='*', markersize=9, color='red')
                 path.draw(ax)
+                # fig.savefig('MotionPlan_Path_GraphBased.png')
                 fig.show()
         else:
             path = Path()
